@@ -1,0 +1,8 @@
+[
+  {"category":"Solid Waste Management","service":"Waste / garbage complaint guidance","keywords":["garbage","waste","rubbish","collection","dumping"]},
+  {"category":"Roads and Public Works","service":"Road or pothole complaint guidance","keywords":["pothole","road","pavement","street"]},
+  {"category":"Street Lighting","service":"Streetlight issue guidance","keywords":["streetlight","street light","lamp","lighting"]},
+  {"category":"Water and Sewerage","service":"Water supply or sewerage service guidance","keywords":["water","sewer","sewage","drain","leak"]},
+  {"category":"Horticulture","service":"Park or tree maintenance guidance","keywords":["park","tree","horticulture","branch"]},
+  {"category":"Property and Municipal Services","service":"Property tax or municipal service guidance","keywords":["property tax","tax","license","lease","challan"]}
+]
