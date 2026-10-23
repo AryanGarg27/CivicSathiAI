@@ -88,7 +88,7 @@ The Docker image listens on Railway's injected `PORT` and uses a mounted volume 
 
 The `.env` file is excluded from Docker and Git. Never put API keys in source code. Before inviting judges, verify HTTPS, sign up with a test citizen account, submit a test report, sign out, and verify staff access using a configured staff email. Railway documents its [persistent volumes](https://docs.railway.com/volumes).
 
-**Publishing is not connected yet:** this workspace has no Git repository, GitHub CLI, Railway CLI, Docker CLI or linked hosting account. Once the code is pushed to a repository accessible to your Railway account and the volume/runtime variables are configured, Railway can build the included Dockerfile.
+The updated application has been pushed to [AryanGarg27/CivicSathiAI](https://github.com/AryanGarg27/CivicSathiAI), in `civicsathi-ai/`. Railway hosting is not connected from this workspace. To publish it, import that GitHub repository in Railway, set the service root directory to `/civicsathi-ai`, add the variables above, attach a persistent volume at `/data`, keep one replica and generate an HTTPS domain. Then send the resulting URL so I can check the public pages and API health. Do not send API keys or account passwords in chat.
 
 ## Docker (optional; not needed on a low-memory laptop)
 
@@ -108,3 +108,4 @@ Create `.env` first. This starts only the application and uses hosted Gemma. SQL
 - Existing SQLite cases are preserved through additive migrations. Back up `civicsathi.db` before moving or deploying the app.
 
 See [architecture](docs/architecture.md) and [privacy](docs/privacy-and-safety.md).
+
