@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from app.schemas import IntakeRequest, SubmitRequest, UpdateRequest, PhotoRequest, Draft, RegisterRequest, LoginRequest, ServiceRequest, ProfileUpdate
 from app.agent_harness import CivicHarness, extract_location
 from app.permissions import require
-from app.database import initialize, connect, all_cases, get_case, get_photo, cleanup_photos, service_requests, get_service_request
+from app.database import initialize, connect, all_cases, get_case, get_photo, cleanup_photos, service_requests, get_service_request, POSTGRES_URL
 from app.duplicate_detection import find_duplicates
 from app.audit_log import append
 from app.service_retrieval import all_services, lookup
@@ -107,6 +107,8 @@ def health():
     return {'status': 'ok', 'model_provider': os.getenv('TEXT_PROVIDER', os.getenv('MODEL_PROVIDER', 'google-gemma')),
             'vision_model': os.getenv('GEMMA_VISION_MODEL', 'gemma-4-26b-a4b-it'),
             'google_configured': bool(os.getenv('GEMINI_API_KEY', '').strip()),
+            'database_provider': 'postgres' if POSTGRES_URL else 'sqlite',
+            'persistent_database_configured': bool(POSTGRES_URL),
             'authentication': 'individual-accounts',
             'official_integration': False}
 

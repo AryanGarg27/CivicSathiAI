@@ -38,11 +38,14 @@ Restart the server after changing `.env`. No Ollama process or model download is
 | `OLLAMA_URL`, `OLLAMA_MODEL` | Optional local text provider; localhost:11434, gemma3:1b |
 | `STAFF_EMAILS` | Comma-separated staff email allowlist; set before those people register |
 | `DB_PATH` | `./civicsathi.db` |
+| `POSTGRES_URL` / `DATABASE_URL` | Persistent PostgreSQL connection for Vercel or another hosted runtime |
 | `AUDIT_LOG_PATH` | `./logs/audit.jsonl` |
 
 The health banner reports whether a key is configured, not whether the provider is reachable or has quota. `/api/health` never returns credentials. Photo analysis uses the Gemini API directly; the older OpenRouter and Gemini adapter files are retained for reference but are not part of the active workflow.
 
 ## Demo walkthrough
+
+The judge pitch, demo sequence, and likely Q&A are in [docs/hackathon-pitch.md](docs/hackathon-pitch.md).
 
 1. Create an account at **Sign up** or sign in at **Sign in**. Browse the home page and **Services** without signing in; applications, reports, tracking and account details require your account.
 2. For photos, agree to Google processing and local evidence storage. **Prepare complaint draft** analyzes the photo automatically. **Analyze photograph** lets you inspect findings first.
@@ -72,7 +75,11 @@ A live smoke test on 23 October 2026 used the running server's Google API key an
 
 Visitors can browse the home page and service directory without an account. Reporting, image analysis, service applications, account pages and tracking require sign-in. Each account has a unique, case-insensitive email and a scrypt password hash. Login sessions use random opaque, HTTP-only, same-site cookies and are stored by hash in SQLite. Passwords and session tokens are never stored as plain text. Sign-up and sign-in have basic per-IP attempt limits.
 
-Each complaint and service request belongs to its creator. Citizens can view only their own requests, photos and history; authorized staff can view the queues and record status updates. SQLite stores users, sessions, cases, service requests, histories and photos in one database. A unified tracking lookup works for both `DEMO-…` and `SRV-…` IDs while enforcing account ownership. Existing complaints from before account support remain available to staff but are not assigned to a citizen automatically. Back up `civicsathi.db` before manual migration.
+Each complaint and service request belongs to its creator. Citizens can view only their own requests, photos and history; authorized staff can view the queues and record status updates. Local runs use SQLite; Vercel uses PostgreSQL for users, sessions, cases, service requests and histories. A unified tracking lookup works for both `DEMO-…` and `SRV-…` IDs while enforcing account ownership. Existing complaints from before account support remain available to staff but are not assigned to a citizen automatically. Back up `civicsathi.db` before manual migration.
+
+## Deploy on Vercel
+
+Vercel runs the FastAPI app as serverless Python functions. SQLite is kept for local development; Vercel deployments require a persistent Postgres database because function filesystems are ephemeral. See [Vercel deployment setup](docs/deployment-vercel.md) for the project root, database integration, environment variables and persistence check. The app refuses to start on Vercel if no Postgres URL is configured.
 
 ## Prepare a live Railway deployment
 
@@ -90,7 +97,7 @@ The Docker image listens on Railway's injected `PORT` and uses a mounted volume 
 
 The `.env` file is excluded from Docker and Git. Never put API keys in source code. Before inviting judges, verify HTTPS, sign up with a test citizen account, submit a test report, sign out, and verify staff access using a configured staff email. Railway documents its [persistent volumes](https://docs.railway.com/volumes).
 
-The updated application has been pushed to [AryanGarg27/CivicSathiAI](https://github.com/AryanGarg27/CivicSathiAI), in `civicsathi-ai/`. Railway hosting is not connected from this workspace. To publish it, import that GitHub repository in Railway, set the service root directory to `/civicsathi-ai`, add the variables above, attach a persistent volume at `/data`, keep one replica and generate an HTTPS domain. Then send the resulting URL so I can check the public pages and API health. Do not send API keys or account passwords in chat.
+The application source is in [AryanGarg27/CivicSathiAI](https://github.com/AryanGarg27/CivicSathiAI), in `civicsathi-ai/`. Vercel deployment requires connecting a persistent PostgreSQL database first; see [deployment setup](docs/deployment-vercel.md). Deployment still needs to be completed from an account with access to the hosting project. Do not send API keys or account passwords in chat.
 
 ## Docker (optional; not needed on a low-memory laptop)
 

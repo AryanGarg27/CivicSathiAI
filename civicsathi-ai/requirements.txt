@@ -6,3 +6,4 @@ httpx>=0.27,<1
 pytest>=8,<10
 python-dotenv>=1,<2
 Pillow>=11,<13
+psycopg[binary]>=3.2,<4
