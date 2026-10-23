@@ -209,7 +209,7 @@ def intake(body: IntakeRequest, request: Request):
 @app.post('/api/duplicates')
 def duplicates(body: Draft, request: Request):
     user = user_from_request(request)
-    return find_duplicates(body, all_cases(limit=1000, user_id=user['id']))
+    return find_duplicates(body, all_cases(limit=1000, user_id=None if user['role'] == 'staff' else user['id']))
 
 
 @app.post('/api/analyze-photo')
@@ -254,6 +254,8 @@ def submit(body: SubmitRequest, request: Request):
     draft = body.draft
     if draft.category == 'other':
         raise HTTPException(400, 'The request could not be matched to a service. Add a little more detail and try again.')
+    if not draft.location or not draft.location.strip():
+        raise HTTPException(400, 'Add the location or nearest landmark before submitting.')
     case_id = 'DEMO-' + uuid.uuid4().hex.upper()
     now = datetime.now(timezone.utc).isoformat()
     photo_id = str(draft.photo_id) if draft.photo_id else None
@@ -315,7 +317,9 @@ def update(case_id: str, body: UpdateRequest, request: Request):
 @app.get('/api/my/cases')
 def my_cases(request: Request):
     user = user_from_request(request)
-    return all_cases(limit=100, user_id=user['id'])
+    # The list endpoint includes history because the Track UI renders the
+    # timeline for every case. Keep the account filter from all_cases intact.
+    return [get_case(item['id']) for item in all_cases(limit=100, user_id=user['id'])]
 
 
 SERVICE_LABELS = {

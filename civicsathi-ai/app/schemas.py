@@ -19,6 +19,8 @@ class Draft(StrictModel):
     category: Category = 'other'
     summary: str = Field(min_length=1, max_length=500)
     location: str | None = Field(default=None, max_length=250)
+    service_type: Literal['health_appointment', 'senior_card', 'disability_card', 'old_age_pension', 'widow_pension', 'disability_pension', 'horticulture'] | None = None
+    extracted_fields: dict[str, str] = Field(default_factory=dict, max_length=12)
     missing_fields: list[str] = Field(default_factory=list, max_length=12)
     language: str = Field(default='unknown', max_length=40)
     confidence: float = Field(default=0.0, ge=0, le=1)

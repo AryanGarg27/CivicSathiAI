@@ -38,19 +38,42 @@ function initAsk(){
  let currentDraft=null,requestKey=crypto.randomUUID();
  $("askForm").addEventListener("submit",async event=>{event.preventDefault();const text=$("requestText").value.trim();if(text.length<5){$("askNotice").textContent="Please add a little more detail.";return;}
   const button=$("understandRequest");button.disabled=true;$("askNotice").textContent="Understanding your request…";$("aiResult").hidden=true;
-  try{const result=await post("/api/intake",{text});currentDraft=result.draft;requestKey=crypto.randomUUID();const service=result.service;
+  try{const result=await post("/api/intake",{text});currentDraft=result.draft;currentDraft.source_text=text;requestKey=crypto.randomUUID();const service=result.service;
    $("suggestedService").textContent=service?.name||"I need one more detail";$("suggestedDescription").textContent=service?.description||"Try adding what you need and where, in your own words.";
    $("aiMode").textContent=result.mode==="safe-fallback"?"AI service unavailable · showing a basic suggestion. Please check carefully.":"Suggested category: "+(categories[currentDraft.category]||currentDraft.category)+". Please check before saving.";
    $("requestSummary").value=currentDraft.summary;$("requestLocation").value=currentDraft.location||"";
    const container=$("matchedDetails");container.replaceChildren();if(service?.source){const link=node("a","Official service information ↗");link.href=service.source;link.target="_blank";link.rel="noopener noreferrer";container.append(link);}else container.textContent="No service match yet; please add detail and try again.";
-   $("saveRequest").hidden=currentDraft.category==="other";$("confirmRequest").checked=false;$("aiResult").hidden=false;$("askNotice").textContent="Review the suggestion. Your request will only be saved after you confirm it.";
+   $("saveRequest").hidden=currentDraft.category==="other";$("confirmRequest").checked=false;$("aiResult").hidden=false;
+   if(currentDraft.category!=="other"){
+    sessionStorage.setItem("civicsathi-intake-draft",JSON.stringify(currentDraft));
+    const target=["health","social_welfare","horticulture"].includes(currentDraft.category)
+      ?"/apply?service="+encodeURIComponent(currentDraft.service_type||({health:"health_appointment",social_welfare:"social_welfare",horticulture:"horticulture"})[currentDraft.category])
+      :"/report";
+    $("askNotice").textContent="Request understood. Opening the matching form with the details you provided…";
+    location.href=target;return;
+   }
+   $("askNotice").textContent="I need a little more detail before routing this request. Add context and try again.";
   }catch(error){$("askNotice").textContent=error.message;}finally{button.disabled=false;}
  });
  $("saveRequest").addEventListener("click",async()=>{if(!currentDraft)return;if(!$("confirmRequest").checked){$("saveNotice").textContent="Please confirm that you reviewed the request.";return;}
   const draft={...currentDraft,summary:$("requestSummary").value.trim(),location:$("requestLocation").value.trim()||null};if(!draft.summary){$("saveNotice").textContent="Add a short summary before saving.";return;}
   const save=$("saveRequest");save.disabled=true;try{const item=await post("/api/cases",{draft,confirmed:true,request_id:requestKey});$("saveNotice").textContent="Saved to your account. Tracking number: "+item.id+". You can check its progress on Nearby help or Track.";save.hidden=true;}catch(error){$("saveNotice").textContent=error.message;}finally{save.disabled=false;}
  });
- const voice=$("voiceInput");voice?.addEventListener("click",()=>{const Recognizer=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Recognizer){$("voiceNotice").textContent="Voice input is not supported in this browser. You can type your request.";return;}const recog=new Recognizer();recog.lang=$("voiceLanguage").value;recog.interimResults=false;recog.onstart=()=>{$("voiceNotice").textContent="Listening… speak now.";voice.disabled=true;};recog.onresult=e=>{$("requestText").value=($("requestText").value+" "+e.results[0][0].transcript).trim();$("voiceNotice").textContent="Voice input added. Review your words before continuing.";};recog.onerror=()=>{$("voiceNotice").textContent="Voice input could not start. You can type your request.";};recog.onend=()=>{voice.disabled=false;};recog.start();});
+ initVoiceInput("voiceInput","requestText","voiceLanguage","voiceNotice");
+}
+function initVoiceInput(buttonId,textId,languageId,noticeId){
+ const voice=$(buttonId);voice?.addEventListener("click",()=>{
+  const Recognizer=window.SpeechRecognition||window.webkitSpeechRecognition,notice=$(noticeId);
+  if(!Recognizer){notice.textContent="This browser does not provide voice typing. Try Chrome or Edge, allow microphone access, or use the microphone on your device keyboard.";return;}
+  if(!window.isSecureContext){notice.textContent="Voice typing needs a secure page (HTTPS or localhost). Open the app using localhost or its HTTPS address.";return;}
+  const recog=new Recognizer();recog.lang=$(languageId).value;recog.interimResults=false;recog.continuous=false;
+  voice.disabled=true;notice.textContent="Starting microphone…";
+  recog.onstart=()=>{notice.textContent="Listening… speak now.";};
+  recog.onresult=e=>{const transcript=e.results?.[0]?.[0]?.transcript;if(transcript){const input=$(textId);input.value=(input.value+" "+transcript).trim();input.dispatchEvent(new Event("input",{bubbles:true}));notice.textContent="Voice input added. Review your words before continuing.";}else notice.textContent="No words were recognized. Try again or type your request.";};
+  recog.onerror=e=>{const messages={"not-allowed":"Microphone access is blocked. Allow microphone access for this site in your browser settings, then try again.","service-not-allowed":"The browser’s speech service is unavailable. Try Chrome or Edge, or use your device keyboard’s microphone.","audio-capture":"No microphone was found. Connect or enable a microphone, then try again.","no-speech":"No speech was heard. Check your microphone and speak after ‘Listening…’ appears.",network:"The browser’s speech service could not connect. Check your internet connection or use your keyboard microphone."};notice.textContent=messages[e.error]||"Voice input failed ("+(e.error||"unknown error")+"). Check microphone permission or type your request.";};
+  recog.onend=()=>{voice.disabled=false;};
+  try{recog.start();}catch(error){voice.disabled=false;notice.textContent=error.name==="NotAllowedError"?"Microphone access is blocked. Allow microphone access for this site, then try again.":"Voice input could not start. Refresh the page and try again, or type your request.";}
+ });
 }
 function initEasyHelp(){
  const makeMapLink=origin=>{const link=$("mapDirections");link.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("Sampark Centre near "+origin+", Chandigarh");link.hidden=false;};
@@ -94,7 +117,15 @@ function renderServices(){
 }
 $("serviceSearch")?.addEventListener("input",renderServices);
 function initReport(){
+ initVoiceInput("reportVoiceInput","issue","reportVoiceLanguage","reportVoiceNotice");
  Object.entries(categories).forEach(([value,label])=>{const o=node("option",label);o.value=value;$("category").append(o);});
+ const routedDraft=readRoutedDraft();if(routedDraft){
+  currentDraft=routedDraft;$("issue").value=routedDraft.source_text||routedDraft.summary||"";$("category").value=routedDraft.category||"other";
+  $("summary").value=routedDraft.summary||"";$("location").value=routedDraft.location||"";
+  $("meta").textContent="Details from Ask CivicSathi are filled in. Review and edit them; add a location if missing.";
+  $("matchedService").textContent="Suggested service: "+(lookupCategory(routedDraft.category)||"Civic service")+". This remains a demo request.";
+  $("result").hidden=false;$("notice").textContent="AI draft loaded. Check the category, summary and location, then confirm before submitting.";
+ }
  $("photo").addEventListener("change",()=>{
   clearPhoto();const f=$("photo").files[0];if(!f)return;
   if(!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>2500000){$("photoResult").textContent="Choose a JPG, PNG or WebP image up to 2.5 MB.";$("photo").value="";return;}
@@ -118,8 +149,9 @@ function initReport(){
   const draft=draftFromForm();if(!draft.location||!draft.summary||draft.category==="other")throw Error("Add a summary, choose a category and provide a location.");
   if(!$("confirm").checked)throw Error("Confirm the details before submitting.");
   const item=await post("/api/cases",{draft,confirmed:true,request_id:requestId});
-  $("submissionResult").textContent="Saved to your account. Case ID: "+item.id;
-  $("submit").disabled=true;$("newComplaint").hidden=false;
+  $("reportSuccessId").textContent="Tracking number: "+item.id;
+  const panel=document.querySelector(".columns > .panel");Array.from(panel.children).forEach(child=>{if(child!==$("reportSuccess"))child.hidden=true;});$("reportSuccess").hidden=false;
+  $("submit").disabled=true;
  }));
  $("newComplaint").addEventListener("click",()=>location.reload());
 }
@@ -138,12 +170,12 @@ async function analyzePhoto(){
  if(result.analysis_available){const a=result.analysis;$("photoResult").textContent=a.description+"\nSuggested category: "+(categories[a.category]||a.category)+(a.uncertainty?"\nUncertainty: "+a.uncertainty:"")+(a.follow_up_question?"\n"+a.follow_up_question:"");}
  else $("photoResult").textContent="Google image analysis is unavailable ("+result.reason+"). You can describe the issue and continue.";
 }
-function draftFromForm(){return {...currentDraft,category:$("category").value,summary:$("summary").value.trim(),location:$("location").value.trim()||null};}
+function draftFromForm(){const {source_text,...draft}=currentDraft||{};return {...draft,category:$("category").value,summary:$("summary").value.trim(),location:$("location").value.trim()||null};}
 function drawDuplicates(items){$("duplicates").textContent=items.length?"Potential matches: "+items.map(x=>x.id+" ("+Math.round(x.score*100)+"%)").join(", ")+". Compare locations before deciding.":"No likely matches among your recent reports.";}
 function renderCase(item){
  const card=node("article",undefined,"case-card");card.append(node("span",statuses[item.status]||item.status,"badge"),node("p",item.id,"case-id"),node("h2",item.summary),node("p",item.location,"muted"));
  if(item.photo_id){const img=node("img");img.src="/api/photos/"+encodeURIComponent(item.photo_id);img.alt="Your complaint photo";img.className="evidence-photo";card.append(img);}
- const timeline=node("ol",undefined,"timeline");item.history.forEach(h=>{const li=node("li");li.append(node("b",statuses[h.status]||h.status),node("small",new Date(h.created_at).toLocaleString()),node("p",h.note||""));timeline.append(li);});card.append(timeline);return card;
+ const timeline=node("ol",undefined,"timeline");(item.history||[]).forEach(h=>{const li=node("li");li.append(node("b",statuses[h.status]||h.status),node("small",new Date(h.created_at).toLocaleString()),node("p",h.note||""));timeline.append(li);});card.append(timeline);return card;
 }
 function renderServiceRequest(item){
  const card=node("article",undefined,"case-card"),labels={health_appointment:"GMSH-16 appointment request",senior_card:"Senior citizen card",disability_card:"Disability identity card",old_age_pension:"Old-age pension application",widow_pension:"Widow pension application",disability_pension:"Disability pension application",horticulture:"Horticulture request"};
@@ -160,14 +192,25 @@ async function loadMyCases(){
 async function loadMyRequests(){try{const items=await api("/api/my/service-requests");$("requestNotice").textContent=items.length?items.length+" service request(s) on your account.":"No service requests yet.";items.forEach(i=>$("myRequests").append(renderServiceRequest(i)));}catch(e){$("requestNotice").textContent=e.message;}}
 function initServiceRequest(){
  const select=$("serviceType"),allowed={health_appointment:["health_appointment"],social_welfare:["senior_card","disability_card","old_age_pension","widow_pension","disability_pension"],horticulture:["horticulture"]},titles={health_appointment:"Government hospital appointment",social_welfare:"Social welfare application",horticulture:"Horticulture request"};
- const initial=new URLSearchParams(location.search).get("service")||"health_appointment",group=allowed[initial]?initial:initial==="social_welfare"?"social_welfare":initial==="horticulture"?"horticulture":"health_appointment";
+ const initial=new URLSearchParams(location.search).get("service")||"health_appointment",group=Object.keys(allowed).find(key=>key===initial||allowed[key].includes(initial))||"health_appointment";
  $("applyTitle").textContent=titles[group];if(group==="social_welfare")$("welfareFields").hidden=false;if(group==="horticulture")$("horticultureFields").hidden=false;if(group==="health_appointment")$("healthFields").hidden=false;
  select.replaceChildren();(allowed[group]||allowed.health_appointment).forEach(type=>{const o=node("option",({senior_card:"Senior citizen card",disability_card:"Disability identity card",old_age_pension:"Old-age pension",widow_pension:"Widow pension",disability_pension:"Disability pension",health_appointment:"GMSH-16 appointment",horticulture:"Horticulture request"})[type]);o.value=type;select.append(o);});
+ const routedDraft=readRoutedDraft();if(routedDraft){
+  const fields=routedDraft.extracted_fields||{};
+  if(routedDraft.service_type&&Array.from(select.options).some(option=>option.value===routedDraft.service_type))select.value=routedDraft.service_type;
+  $("applicantName").value=fields.applicant_name||"";$("phone").value=fields.contact_phone||"";
+  if(group==="health_appointment"){$("department").value=fields.department||"";$("preferredDate").value=fields.preferred_date||"";$("visitReason").value=fields.reason||routedDraft.summary||"";}
+  else if(group==="social_welfare"){$("beneficiaryName").value=fields.beneficiary_name||"";$("relationship").value=fields.relationship||"Self";$("welfareAddress").value=fields.address||routedDraft.location||"";$("welfareDescription").value=fields.description||routedDraft.summary||"";$("welfareKind").textContent=select.options[select.selectedIndex].text;}
+  else if(group==="horticulture"){$("requestLocation").value=routedDraft.location||fields.address||"";$("requestDescription").value=fields.description||routedDraft.summary||"";}
+  $("requestNotice").textContent="AI-filled details are ready. Review them, complete any missing required fields, then confirm before saving.";
+ }
  select.addEventListener("change",()=>{$("welfareKind").textContent=select.options[select.selectedIndex].text;});
  $("serviceRequestForm").addEventListener("submit",async e=>{e.preventDefault();const type=select.value,details={};if(type==="health_appointment"){details.department=$("department").value;details.preferred_date=$("preferredDate").value;details.reason=$("visitReason").value.trim();}else if(type==="horticulture"){details.location=$("requestLocation").value.trim();details.description=$("requestDescription").value.trim();if(!details.location||!details.description){$("requestNotice").textContent="Add the location and a short description.";return;}}else{details.beneficiary_name=$("beneficiaryName").value.trim();details.relationship=$("relationship").value;details.address=$("welfareAddress").value.trim();details.description=$("welfareDescription").value.trim();if(!details.beneficiary_name){$("requestNotice").textContent="Enter the beneficiary name.";return;}}
-  const submit=$("requestSubmit");submit.disabled=true;$("requestNotice").textContent="Saving your demo request…";try{const result=await post("/api/service-requests",{service_type:type,applicant_name:$("applicantName").value.trim(),contact_phone:$("phone").value.trim(),details});$("requestNotice").textContent="Request recorded in your account: "+result.id+". This is not an official submission or confirmed appointment.";$("serviceRequestForm").hidden=true;$("viewTracking").hidden=false;}catch(err){$("requestNotice").textContent=err.message;}finally{submit.disabled=false;}
+  const submit=$("requestSubmit");submit.disabled=true;$("requestNotice").textContent="Saving your demo request…";try{const result=await post("/api/service-requests",{service_type:type,applicant_name:$("applicantName").value.trim(),contact_phone:$("phone").value.trim(),details});$("serviceSuccessId").textContent="Tracking number: "+result.id;$("serviceRequestForm").hidden=true;$("serviceSuccess").hidden=false;}catch(err){$("requestNotice").textContent=err.message;}finally{submit.disabled=false;}
  });
 }
+function readRoutedDraft(){try{const raw=sessionStorage.getItem("civicsathi-intake-draft");if(!raw)return null;sessionStorage.removeItem("civicsathi-intake-draft");return JSON.parse(raw);}catch(_){sessionStorage.removeItem("civicsathi-intake-draft");return null;}}
+function lookupCategory(category){return categories[category]||null;}
 async function initAccount(){
  $("accountName").textContent=me.full_name.split(" ")[0]+"."; $("accountEmail").textContent=me.email;
  $("logout").addEventListener("click",async()=>{await post("/api/auth/logout",{});location.href="/";});
