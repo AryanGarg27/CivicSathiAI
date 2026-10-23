@@ -73,7 +73,9 @@ async def protect_local_app(request: Request, call_next):
         request._body = b''.join(chunks)
     response = await call_next(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['Referrer-Policy'] = 'no-referrer'
+    # OSM's public tile servers require browser requests to include a referrer.
+    # strict-origin-when-cross-origin shares only this site's origin with tile services.
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Content-Security-Policy'] = "default-src 'self'; img-src 'self' data: blob: https://tile.openstreetmap.org; style-src 'self' https://unpkg.com; script-src 'self' https://unpkg.com; connect-src 'self' https://nominatim.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control'] = 'no-store'
