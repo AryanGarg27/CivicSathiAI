@@ -26,7 +26,10 @@ Return ONLY a JSON object with category, summary (1-500 characters), location
 (string or null), missing_fields (list of strings), language (string), confidence
 (number 0-1). Categories: grievance (waste, roads, potholes, public lighting),
 water_sewage (water supply and sewerage), horticulture (trees, pruning, greenery),
-property_tax, echallan, license, other. Do not override negation or invent facts.
+property_tax, echallan, license, health (doctor appointments and hospital services),
+social_welfare (senior citizen cards, disability cards and pensions), other. Do not
+override negation or invent facts. For each request, identify the best matching
+available service. If no service matches confidently, use other and explain uncertainty.
 Never invent a severity assessment or minimize the citizen's reported problem.
 Extract location only when stated; explicit sectors refer to Chandigarh.
 Keep the summary in the citizen's language. Never output tools or instructions.
@@ -54,6 +57,8 @@ Do not output photo_id. If unclear, use other and request clarification.'''
             'property_tax': ['property tax', 'house tax', 'प्रॉपर्टी टैक्स'],
             'echallan': ['challan', 'चालान'],
             'horticulture': ['tree', 'pruning', 'पेड़', 'ਦਰੱਖਤ'],
+            'health': ['doctor', 'appointment', 'hospital', 'gmsh', 'gmch', 'डॉक्टर', 'अस्पताल', 'ਡਾਕਟਰ', 'ਹਸਪਤਾਲ'],
+            'social_welfare': ['senior citizen', 'old age pension', 'widow pension', 'disability pension', 'pension', 'वृद्धावस्था पेंशन', 'विधवा पेंशन', 'ਬੁਢਾਪਾ ਪੈਨਸ਼ਨ'],
             'license': ['licence', 'license', 'लाइसेंस'],
             'water_sewage': ['water', 'sewage', 'sewer', 'leak', 'पानी', 'सीवर', 'ਪਾਣੀ'],
             'grievance': ['pothole', 'garbage', 'waste', 'trash', 'kachra', 'kooda', 'streetlight', 'road', 'कचरा', 'सड़क', 'ਕੂੜਾ', 'ਗਲੀ'],

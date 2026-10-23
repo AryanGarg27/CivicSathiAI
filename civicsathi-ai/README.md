@@ -1,6 +1,6 @@
 # CivicSathi AI — Chandigarh civic service companion
 
-A multi-page civic service application with individual accounts, AI-assisted photo/text complaints, trackable GMSH-16 appointment requests, social-welfare application intake, horticulture requests, a Sampark service directory, SQLite persistence and a staff status queue.
+A multi-page civic service application with individual accounts, open-ended AI request intake, voice input, trackable GMSH-16 appointment requests, social-welfare application intake, horticulture requests, nearby Sampark Centre assistance, SQLite persistence and a staff status queue.
 
 **Independent prototype, not an official municipal service.** No municipal submission or government integration occurs. Google-hosted Gemma performs AI inference over the internet; the web application and database run on your laptop.
 
@@ -49,7 +49,9 @@ The health banner reports whether a key is configured, not whether the provider 
 3. Review the summary, category and location. A photo alone cannot supply the location. Unrelated images are categorized `other` and must not be forced into a complaint.
 4. Check the suggested service and possible duplicates. Recheck after editing. Confirm the details, then **Create demo case**. Keep the tracking ID private.
 5. Staff members use the same sign-in page. Add staff emails to `STAFF_EMAILS` before they register. Staff can move cases to **Under review**, **In progress** and **Resolved**; resolution or rejection requires a note.
-6. From **Services**, try a GMSH-16 appointment preference, a senior-citizen/disability/pension request, or a horticulture request. Requests are saved to your account and can be tracked on **Track**. Staff can update their status on the separate **Staff** page.
+6. From **Ask CivicSathi**, type or dictate a request without choosing a category. Review the AI's suggested category, service and summary before saving. Every confirmed request is stored in your account database and receives a tracking number.
+7. On **Nearby help**, allow location access or type your area to open Sampark Centre results in Maps. The browser passes location to Maps only if you open its link; CivicSathi does not store coordinates. Enter a tracking number to see a request's status and history, or have it read aloud. The page links to official centre and holiday information and the e-Sampark helpline.
+8. From **Services**, you can still start GMSH-16 appointment preferences, senior-citizen/disability/pension requests, or horticulture requests. Requests are saved to your account and can be tracked on **Track**. Staff can update status in **Staff**.
 
 Health and social-welfare service names are grounded in Chandigarh e-Sampark's published service list. The directory also opens Chandigarh Sampark Centre map results and links to official centre information. These forms are a local demo intake only: they do not book a hospital visit, verify eligibility, accept official documents or submit anything to a government system. Use e-Sampark to confirm live requirements, fees, holidays and centres.
 
@@ -70,7 +72,7 @@ A live smoke test on 23 October 2026 used the running server's Google API key an
 
 Visitors can browse the home page and service directory without an account. Reporting, image analysis, service applications, account pages and tracking require sign-in. Each account has a unique, case-insensitive email and a scrypt password hash. Login sessions use random opaque, HTTP-only, same-site cookies and are stored by hash in SQLite. Passwords and session tokens are never stored as plain text. Sign-up and sign-in have basic per-IP attempt limits.
 
-Each complaint and service request belongs to its creator. Citizens can view only their own complaints, photos and service requests; authorized staff can view the queues and record status updates. SQLite stores users, sessions, cases, service requests, history and photos in one database. Existing complaints from before account support remain available to staff but are not assigned to a citizen automatically. Back up `civicsathi.db` before manual migration.
+Each complaint and service request belongs to its creator. Citizens can view only their own requests, photos and history; authorized staff can view the queues and record status updates. SQLite stores users, sessions, cases, service requests, histories and photos in one database. A unified tracking lookup works for both `DEMO-…` and `SRV-…` IDs while enforcing account ownership. Existing complaints from before account support remain available to staff but are not assigned to a citizen automatically. Back up `civicsathi.db` before manual migration.
 
 ## Prepare a live Railway deployment
 

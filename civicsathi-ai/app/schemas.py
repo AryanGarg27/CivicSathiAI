@@ -2,7 +2,7 @@ from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
-Category = Literal['grievance', 'property_tax', 'echallan', 'horticulture', 'license', 'water_sewage', 'other']
+Category = Literal['grievance', 'property_tax', 'echallan', 'horticulture', 'license', 'water_sewage', 'health', 'social_welfare', 'other']
 Status = Literal['received', 'under_review', 'in_progress', 'resolved', 'rejected']
 
 

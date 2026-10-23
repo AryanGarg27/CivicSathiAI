@@ -89,10 +89,13 @@ async def protect_local_app(request: Request, call_next):
 @app.get('/sign-up')
 @app.get('/staff')
 @app.get('/apply')
+@app.get('/help')
+@app.get('/ask')
 def page(request: Request):
     names = {'/': 'index.html', '/services': 'services.html', '/report': 'report.html',
              '/track': 'track.html', '/account': 'account.html', '/sign-in': 'auth.html',
-             '/sign-up': 'auth.html', '/staff': 'staff.html', '/apply': 'apply.html'}
+             '/sign-up': 'auth.html', '/staff': 'staff.html', '/apply': 'apply.html',
+             '/help': 'help.html', '/ask': 'ask.html'}
     response = FileResponse(ROOT / 'web' / names[request.url.path])
     response.headers['X-Page-Mode'] = 'sign-up' if request.url.path == '/sign-up' else 'sign-in'
     return response
@@ -249,10 +252,8 @@ def submit(body: SubmitRequest, request: Request):
     if not body.confirmed:
         raise HTTPException(400, 'Citizen confirmation required')
     draft = body.draft
-    if not draft.location:
-        raise HTTPException(400, 'Location required before submission')
     if draft.category == 'other':
-        raise HTTPException(400, 'Select a civic service category before submitting')
+        raise HTTPException(400, 'The request could not be matched to a service. Add a little more detail and try again.')
     case_id = 'DEMO-' + uuid.uuid4().hex.upper()
     now = datetime.now(timezone.utc).isoformat()
     photo_id = str(draft.photo_id) if draft.photo_id else None
@@ -354,6 +355,23 @@ def create_service_request(body: ServiceRequest, request: Request):
 def my_service_requests(request: Request):
     user = user_from_request(request)
     return service_requests(user_id=user['id'])
+
+
+@app.get('/api/my/requests/{request_id}')
+def my_request_status(request_id: str, request: Request):
+    user = user_from_request(request)
+    if request_id.startswith('SRV-'):
+        item = get_service_request(request_id)
+        if not item or (item['user_id'] != user['id'] and user['role'] != 'staff'):
+            raise HTTPException(404, 'Request not found in your account.')
+        return {'id': item['id'], 'kind': SERVICE_LABELS.get(item['service_type'], 'Service request'),
+                'status': item['status'], 'created_at': item['created_at'], 'history': item['history']}
+    item = get_case(request_id)
+    if not item or (item['user_id'] != user['id'] and user['role'] != 'staff'):
+        raise HTTPException(404, 'Request not found in your account.')
+    return {'id': item['id'], 'kind': lookup(item['category'])['name'] if lookup(item['category']) else item['category'],
+            'status': item['status'], 'created_at': item['created_at'], 'location': item['location'],
+            'summary': item['summary'], 'history': item['history']}
 
 
 @app.get('/api/admin/service-requests')

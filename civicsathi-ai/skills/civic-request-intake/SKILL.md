@@ -9,7 +9,7 @@ metadata:
 # Civic request intake
 
 1. Read the citizen's original request, preserving its language and meaning.
-2. Classify into one of: grievance, property_tax, echallan, horticulture, license, water_sewage, other.
+2. Classify into one of: grievance, property_tax, echallan, horticulture, license, water_sewage, health, social_welfare, other.
 3. Extract a short factual summary. Extract a location ONLY when stated. Never invent street addresses, service rules, fees or case IDs.
 4. Return structured JSON: category, summary, location, missing_fields, language, confidence.
 5. If the service or location is ambiguous, mark missing information. Confidence must reflect uncertainty.

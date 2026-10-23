@@ -17,7 +17,7 @@ async function bootstrap(){
  const result=await api("/api/auth/me");me=result.user;
  const account=$("accountLink");if(account){account.href=me?"/account":"/sign-in";account.textContent=me?"My account":"Sign in";}
  const staff=$("staffLink");if(staff&&me?.role==="staff")staff.hidden=false;
- if(["/report","/track","/account","/staff"].includes(location.pathname)&&!me){goSignIn();return;}
+ if(["/report","/ask","/track","/account","/staff"].includes(location.pathname)&&!me){goSignIn();return;}
  if(location.pathname==="/staff"&&me?.role!=="staff"){location.href="/";return;}
  initPage();
  }catch(e){const s=$("systemStatus");if(s){s.hidden=false;s.textContent="App server is unavailable. Refresh after it starts.";}}
@@ -26,11 +26,38 @@ function initPage(){
  if($("authForm"))initAuth();
  if($("services"))loadServices();
  if($("serviceRequestForm"))initServiceRequest();
+ if($("askForm"))initAsk();
+ if($("locateCentre"))initEasyHelp();
  if($("analyze"))initReport();
  if($("myCases"))loadMyCases();
  if($("myRequests"))loadMyRequests();
  if($("accountCases"))initAccount();
  if($("staffCases"))initStaff();
+}
+function initAsk(){
+ let currentDraft=null,requestKey=crypto.randomUUID();
+ $("askForm").addEventListener("submit",async event=>{event.preventDefault();const text=$("requestText").value.trim();if(text.length<5){$("askNotice").textContent="Please add a little more detail.";return;}
+  const button=$("understandRequest");button.disabled=true;$("askNotice").textContent="Understanding your request…";$("aiResult").hidden=true;
+  try{const result=await post("/api/intake",{text});currentDraft=result.draft;requestKey=crypto.randomUUID();const service=result.service;
+   $("suggestedService").textContent=service?.name||"I need one more detail";$("suggestedDescription").textContent=service?.description||"Try adding what you need and where, in your own words.";
+   $("aiMode").textContent=result.mode==="safe-fallback"?"AI service unavailable · showing a basic suggestion. Please check carefully.":"Suggested category: "+(categories[currentDraft.category]||currentDraft.category)+". Please check before saving.";
+   $("requestSummary").value=currentDraft.summary;$("requestLocation").value=currentDraft.location||"";
+   const container=$("matchedDetails");container.replaceChildren();if(service?.source){const link=node("a","Official service information ↗");link.href=service.source;link.target="_blank";link.rel="noopener noreferrer";container.append(link);}else container.textContent="No service match yet; please add detail and try again.";
+   $("saveRequest").hidden=currentDraft.category==="other";$("confirmRequest").checked=false;$("aiResult").hidden=false;$("askNotice").textContent="Review the suggestion. Your request will only be saved after you confirm it.";
+  }catch(error){$("askNotice").textContent=error.message;}finally{button.disabled=false;}
+ });
+ $("saveRequest").addEventListener("click",async()=>{if(!currentDraft)return;if(!$("confirmRequest").checked){$("saveNotice").textContent="Please confirm that you reviewed the request.";return;}
+  const draft={...currentDraft,summary:$("requestSummary").value.trim(),location:$("requestLocation").value.trim()||null};if(!draft.summary){$("saveNotice").textContent="Add a short summary before saving.";return;}
+  const save=$("saveRequest");save.disabled=true;try{const item=await post("/api/cases",{draft,confirmed:true,request_id:requestKey});$("saveNotice").textContent="Saved to your account. Tracking number: "+item.id+". You can check its progress on Nearby help or Track.";save.hidden=true;}catch(error){$("saveNotice").textContent=error.message;}finally{save.disabled=false;}
+ });
+ const voice=$("voiceInput");voice?.addEventListener("click",()=>{const Recognizer=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Recognizer){$("voiceNotice").textContent="Voice input is not supported in this browser. You can type your request.";return;}const recog=new Recognizer();recog.lang=$("voiceLanguage").value;recog.interimResults=false;recog.onstart=()=>{$("voiceNotice").textContent="Listening… speak now.";voice.disabled=true;};recog.onresult=e=>{$("requestText").value=($("requestText").value+" "+e.results[0][0].transcript).trim();$("voiceNotice").textContent="Voice input added. Review your words before continuing.";};recog.onerror=()=>{$("voiceNotice").textContent="Voice input could not start. You can type your request.";};recog.onend=()=>{voice.disabled=false;};recog.start();});
+}
+function initEasyHelp(){
+ const makeMapLink=origin=>{const link=$("mapDirections");link.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("Sampark Centre near "+origin+", Chandigarh");link.hidden=false;};
+ $("locateCentre").addEventListener("click",()=>{if(!navigator.geolocation){$("locationNotice").textContent="Location is unavailable in this browser. Enter your sector below.";return;}$("locationNotice").textContent="Finding your location…";navigator.geolocation.getCurrentPosition(pos=>{makeMapLink(pos.coords.latitude+","+pos.coords.longitude);$("locationNotice").textContent="Nearby results are ready. Your location is shared with Maps only if you open the link.";},()=>{$("locationNotice").textContent="Could not access your location. Enter your sector below.";},{enableHighAccuracy:false,timeout:10000,maximumAge:120000});});
+ $("manualDirections").addEventListener("click",()=>{const place=$("manualOrigin").value.trim();if(!place){$("locationNotice").textContent="Enter a sector or area first.";return;}makeMapLink(place);$("locationNotice").textContent="Nearby results are ready. Open Maps to see them.";});
+ $("checkStatus").addEventListener("click",async()=>{const id=$("statusId").value.trim().toUpperCase();if(!id){$("statusResult").textContent="Enter your tracking number first.";return;}$("checkStatus").disabled=true;$("statusResult").textContent="Checking your request…";$("statusHistory").replaceChildren();$("speakStatus").disabled=true;$("helpSignIn").hidden=true;try{const item=await api("/api/my/requests/"+encodeURIComponent(id));const statusName=statuses[item.status]||item.status;const spoken="Your "+item.kind+" request, number "+item.id+", is "+statusName.replaceAll("_"," ")+(item.history?.at(-1)?.note?". Latest update: "+item.history.at(-1).note:"");$("statusResult").textContent=spoken;const list=node("ol",undefined,"timeline");(item.history||[]).forEach(row=>{const li=node("li");li.append(node("b",statuses[row.status]||row.status),node("small",new Date(row.created_at).toLocaleString()),node("p",row.note||""));list.append(li);});$("statusHistory").append(list);$("speakStatus").disabled=false;$("lastStatusText").textContent=spoken;}catch(error){$("statusResult").textContent=error.message;if(error.message.toLowerCase().includes("sign in"))$("helpSignIn").hidden=false;}finally{$("checkStatus").disabled=false;}});
+ $("speakStatus").addEventListener("click",()=>{if(!window.speechSynthesis){$("statusResult").textContent="Read-aloud is not supported in this browser.";return;}window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance($("lastStatusText").textContent));});
 }
 function initAuth(){
  const signup=location.pathname==="/sign-up";
