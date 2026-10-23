@@ -45,7 +45,7 @@ def current_user(token):
     if not token or len(token) > 100:
         return None
     with connect() as c:
-        row = c.execute('SELECT users.id,users.email,users.full_name,users.role FROM sessions JOIN users ON users.id=sessions.user_id WHERE sessions.token_hash=? AND sessions.expires_at>?',
+        row = c.execute('SELECT users.id,users.email,users.full_name,users.phone,users.address,users.role FROM sessions JOIN users ON users.id=sessions.user_id WHERE sessions.token_hash=? AND sessions.expires_at>?',
                         (session_digest(token), datetime.now(timezone.utc).isoformat())).fetchone()
         return dict(row) if row else None
 

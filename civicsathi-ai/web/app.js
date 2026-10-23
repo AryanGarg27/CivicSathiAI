@@ -16,14 +16,16 @@ async function bootstrap(){
  try{const h=await api("/api/health");const s=$("systemStatus");if(s){s.hidden=false;s.textContent="Connected · Google AI "+(h.google_configured?"ready":"needs configuration")+" · Private account storage";s.classList.toggle("ready",h.google_configured);}
  const result=await api("/api/auth/me");me=result.user;
  const account=$("accountLink");if(account){account.href=me?"/account":"/sign-in";account.textContent=me?"My account":"Sign in";}
+ const profileLink=$("profileLink");if(profileLink)profileLink.hidden=!me;
  const staff=$("staffLink");if(staff&&me?.role==="staff")staff.hidden=false;
- if(["/report","/ask","/track","/account","/staff"].includes(location.pathname)&&!me){goSignIn();return;}
+ if(["/report","/ask","/track","/account","/profile","/staff"].includes(location.pathname)&&!me){goSignIn();return;}
  if(location.pathname==="/staff"&&me?.role!=="staff"){location.href="/";return;}
  initPage();
  }catch(e){const s=$("systemStatus");if(s){s.hidden=false;s.textContent="App server is unavailable. Refresh after it starts.";}}
 }
 function initPage(){
  if($("authForm"))initAuth();
+ if($("profileForm"))initProfile();
  if($("services"))loadServices();
  if($("serviceRequestForm"))initServiceRequest();
  if($("askForm"))initAsk();
@@ -96,6 +98,26 @@ function initAuth(){
    const next=new URLSearchParams(location.search).get("next");location.href=next&&next.startsWith("/")&&!next.startsWith("//")?next:(result.user.role==="staff"?"/staff":"/account");
   }catch(e){$("authNotice").textContent=e.message;}finally{$("authSubmit").disabled=false;}
  });
+}
+async function initProfile(){
+ const form=$("profileForm"),fields={full_name:$("profileName"),phone:$("profilePhone"),address:$("profileAddress")},status=$("profileStatus");
+ try{
+  const profile=await api("/api/profile");$("profileEmail").textContent=profile.email;
+  fields.full_name.value=profile.full_name||"";fields.phone.value=profile.phone||"";fields.address.value=profile.address||"";
+  let saved=Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value]));let timer=null,inFlight=false,queued=false;
+  const save=async()=>{
+   clearTimeout(timer);const values=Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value.trim()]));
+   const changes=Object.fromEntries(Object.entries(values).filter(([key,value])=>value!==saved[key]));
+   if(!Object.keys(changes).length){status.textContent="All changes saved.";return;}
+   if(inFlight){queued=true;return;}inFlight=true;queued=false;status.textContent="Saving your profile…";
+   let succeeded=false;try{const updated=await api("/api/profile",{method:"PATCH",body:JSON.stringify(changes)});saved={full_name:updated.full_name||"",phone:updated.phone||"",address:updated.address||""};succeeded=true;status.textContent="Saved to your profile.";}
+   catch(error){queued=false;status.textContent="Could not save: "+error.message+". Edit a field or press Save now to retry.";}
+   finally{inFlight=false;const latest=Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value.trim()]));if(succeeded&&(queued||Object.keys(latest).some(key=>latest[key]!==saved[key])))timer=setTimeout(save,250);}
+  };
+  form.addEventListener("input",()=>{status.textContent="Unsaved changes…";clearTimeout(timer);timer=setTimeout(save,700);});
+  Object.values(fields).forEach(input=>input.addEventListener("blur",save));
+  form.addEventListener("submit",event=>{event.preventDefault();save();});
+ }catch(error){status.textContent="Could not load your profile: "+error.message;}
 }
 async function loadServices(){
  try{services=await api("/api/services");renderServices();}
@@ -198,9 +220,9 @@ function initServiceRequest(){
  const routedDraft=readRoutedDraft();if(routedDraft){
   const fields=routedDraft.extracted_fields||{};
   if(routedDraft.service_type&&Array.from(select.options).some(option=>option.value===routedDraft.service_type))select.value=routedDraft.service_type;
-  $("applicantName").value=fields.applicant_name||"";$("phone").value=fields.contact_phone||"";
+  $("applicantName").value=fields.applicant_name||me?.full_name||"";$("phone").value=fields.contact_phone||me?.phone||"";
   if(group==="health_appointment"){$("department").value=fields.department||"";$("preferredDate").value=fields.preferred_date||"";$("visitReason").value=fields.reason||routedDraft.summary||"";}
-  else if(group==="social_welfare"){$("beneficiaryName").value=fields.beneficiary_name||"";$("relationship").value=fields.relationship||"Self";$("welfareAddress").value=fields.address||routedDraft.location||"";$("welfareDescription").value=fields.description||routedDraft.summary||"";$("welfareKind").textContent=select.options[select.selectedIndex].text;}
+  else if(group==="social_welfare"){$("beneficiaryName").value=fields.beneficiary_name||"";$("relationship").value=fields.relationship||"Self";$("welfareAddress").value=fields.address||routedDraft.location||me?.address||"";$("welfareDescription").value=fields.description||routedDraft.summary||"";$("welfareKind").textContent=select.options[select.selectedIndex].text;}
   else if(group==="horticulture"){$("requestLocation").value=routedDraft.location||fields.address||"";$("requestDescription").value=fields.description||routedDraft.summary||"";}
   $("requestNotice").textContent="AI-filled details are ready. Review them, complete any missing required fields, then confirm before saving.";
  }

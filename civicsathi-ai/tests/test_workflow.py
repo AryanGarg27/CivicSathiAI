@@ -195,3 +195,15 @@ def test_same_words_in_different_sectors_are_not_duplicates():
     from app.duplicate_detection import find_duplicates
     assert find_duplicates(Draft(category='grievance', summary='Broken streetlight', location='Sector 22'),
         [{'id':'test','category':'grievance','summary':'Broken streetlight','location':'Sector 17'}]) == []
+
+
+def test_profile_is_saved_to_signed_in_user(client):
+    saved = client.patch('/api/profile', json={
+        'full_name': 'Demo Citizen Updated', 'phone': '+91 98765 43210', 'address': 'Sector 22, Chandigarh'
+    })
+    assert saved.status_code == 200
+    assert saved.json()['phone'] == '+91 98765 43210'
+    assert saved.json()['address'] == 'Sector 22, Chandigarh'
+    assert client.get('/api/profile').json()['full_name'] == 'Demo Citizen Updated'
+    client.post('/api/auth/logout')
+    assert client.get('/api/profile').status_code == 401

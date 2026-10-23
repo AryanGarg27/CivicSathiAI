@@ -12,7 +12,7 @@ from uuid import UUID
 from fastapi import FastAPI, HTTPException, Header, Query, Request, Response as FastResponse
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from app.schemas import IntakeRequest, SubmitRequest, UpdateRequest, PhotoRequest, Draft, RegisterRequest, LoginRequest, ServiceRequest
+from app.schemas import IntakeRequest, SubmitRequest, UpdateRequest, PhotoRequest, Draft, RegisterRequest, LoginRequest, ServiceRequest, ProfileUpdate
 from app.agent_harness import CivicHarness, extract_location
 from app.permissions import require
 from app.database import initialize, connect, all_cases, get_case, get_photo, cleanup_photos, service_requests, get_service_request
@@ -85,6 +85,7 @@ async def protect_local_app(request: Request, call_next):
 @app.get('/report')
 @app.get('/track')
 @app.get('/account')
+@app.get('/profile')
 @app.get('/sign-in')
 @app.get('/sign-up')
 @app.get('/staff')
@@ -93,7 +94,7 @@ async def protect_local_app(request: Request, call_next):
 @app.get('/ask')
 def page(request: Request):
     names = {'/': 'index.html', '/services': 'services.html', '/report': 'report.html',
-             '/track': 'track.html', '/account': 'account.html', '/sign-in': 'auth.html',
+             '/track': 'track.html', '/account': 'account.html', '/profile': 'profile.html', '/sign-in': 'auth.html',
              '/sign-up': 'auth.html', '/staff': 'staff.html', '/apply': 'apply.html',
              '/help': 'help.html', '/ask': 'ask.html'}
     response = FileResponse(ROOT / 'web' / names[request.url.path])
@@ -131,6 +132,37 @@ def cookie_is_secure(request):
 def auth_me(request: Request):
     user = current_user(request.cookies.get('civic_session'))
     return {'authenticated': bool(user), 'user': user}
+
+
+@app.get('/api/profile')
+def get_profile(request: Request):
+    user = user_from_request(request)
+    return {key: user.get(key) for key in ('id', 'email', 'full_name', 'phone', 'address')}
+
+
+@app.patch('/api/profile')
+def update_profile(body: ProfileUpdate, request: Request):
+    user = user_from_request(request)
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        return {key: user.get(key) for key in ('id', 'email', 'full_name', 'phone', 'address')}
+    for key, value in updates.items():
+        if value is not None:
+            updates[key] = value.strip()
+    if 'full_name' in updates and (updates['full_name'] is None or len(updates['full_name']) < 2):
+        raise HTTPException(422, 'Enter a name with at least two characters.')
+    if 'phone' in updates and updates['phone']:
+        number = updates['phone']
+        if not number.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '').isdigit():
+            raise HTTPException(422, 'Enter a phone number using digits, spaces, +, parentheses or hyphens.')
+        if len(''.join(ch for ch in number if ch.isdigit())) < 8:
+            raise HTTPException(422, 'Enter a phone number with at least 8 digits.')
+    columns = ', '.join(f'{key}=?' for key in updates)
+    with connect() as c:
+        c.execute(f'UPDATE users SET {columns} WHERE id=?', (*updates.values(), user['id']))
+        row = c.execute('SELECT id,email,full_name,phone,address FROM users WHERE id=?', (user['id'],)).fetchone()
+    append('profile_updated', {'user_id': user['id'], 'fields': sorted(updates)})
+    return dict(row)
 
 
 @app.post('/api/auth/register', status_code=201)

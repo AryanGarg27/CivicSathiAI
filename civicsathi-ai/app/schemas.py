@@ -64,6 +64,12 @@ class LoginRequest(StrictModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class ProfileUpdate(StrictModel):
+    full_name: str | None = Field(default=None, min_length=2, max_length=100)
+    phone: str | None = Field(default=None, max_length=30)
+    address: str | None = Field(default=None, max_length=500)
+
+
 class ServiceRequest(StrictModel):
     service_type: Literal['health_appointment', 'senior_card', 'disability_card', 'old_age_pension', 'widow_pension', 'disability_pension', 'horticulture']
     applicant_name: str = Field(min_length=2, max_length=100)

@@ -44,6 +44,10 @@ def initialize():
         if 'user_id' not in photo_fields:
             c.execute('ALTER TABLE photos ADD COLUMN user_id TEXT REFERENCES users(id)')
         c.execute('CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE COLLATE NOCASE, full_name TEXT NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'citizen\', created_at TEXT NOT NULL)')
+        user_fields = {r['name'] for r in c.execute('PRAGMA table_info(users)')}
+        for name in ('phone', 'address'):
+            if name not in user_fields:
+                c.execute(f'ALTER TABLE users ADD COLUMN {name} TEXT')
         c.execute('CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, created_at TEXT NOT NULL, expires_at TEXT NOT NULL)')
         c.execute('''CREATE TABLE IF NOT EXISTS service_requests (
             id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), service_type TEXT NOT NULL,
