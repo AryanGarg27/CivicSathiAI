@@ -38,6 +38,7 @@ function initPage(){
 }
 function initAsk(){
  let currentDraft=null,requestKey=crypto.randomUUID();
+ initSpeechResponse("speakAiResponse","aiSpeechStatus",()=>currentDraft?`CivicSathi suggests ${categories[currentDraft.category]||currentDraft.category}. ${currentDraft.summary}${currentDraft.location?" Location: "+currentDraft.location:""}. Please review the details before continuing.`:"There is no AI response to read yet.",()=>$("voiceLanguage").value);
  $("askForm").addEventListener("submit",async event=>{event.preventDefault();const text=$("requestText").value.trim();if(text.length<5){$("askNotice").textContent="Please add a little more detail.";return;}
   const button=$("understandRequest");button.disabled=true;$("askNotice").textContent="Understanding your request…";$("aiResult").hidden=true;
   try{const result=await post("/api/intake",{text});currentDraft=result.draft;currentDraft.source_text=text;requestKey=crypto.randomUUID();const service=result.service;
@@ -77,6 +78,22 @@ function initVoiceInput(buttonId,textId,languageId,noticeId){
   try{recog.start();}catch(error){voice.disabled=false;notice.textContent=error.name==="NotAllowedError"?"Microphone access is blocked. Allow microphone access for this site, then try again.":"Voice input could not start. Refresh the page and try again, or type your request.";}
  });
 }
+function initSpeechResponse(buttonId,statusId,getText,getLanguage){
+ const button=$(buttonId),status=$(statusId);if(!button||!status)return;
+ const defaultLabel=button.textContent;
+ button.addEventListener("click",()=>{
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){status.textContent="Read-aloud is not supported in this browser. You can read the response on screen.";return;}
+  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();button.textContent=defaultLabel;status.textContent="Read-aloud stopped.";return;}
+  const text=getText().trim();if(!text){status.textContent="There is no response to read yet.";return;}
+  const language=getLanguage()||"en-IN",utterance=new SpeechSynthesisUtterance(text);utterance.lang=language;utterance.rate=0.94;
+  const voices=window.speechSynthesis.getVoices(),voice=voices.find(item=>item.lang.toLowerCase()===language.toLowerCase())||voices.find(item=>item.lang.toLowerCase().startsWith(language.split("-")[0].toLowerCase()));if(voice)utterance.voice=voice;
+  utterance.onstart=()=>{button.textContent="⏹ Stop reading";status.textContent="Reading the AI response aloud…";};
+  utterance.onend=()=>{button.textContent=defaultLabel;status.textContent="Finished reading the response.";};
+  utterance.onerror=()=>{button.textContent=defaultLabel;status.textContent="Read-aloud could not start. Check that your device has an available speech voice.";};
+  status.textContent="Starting read-aloud…";window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);
+ });
+}
+function speechLanguage(language){return ({hindi:"hi-IN",punjabi:"pa-IN",english:"en-IN",english_or_romanized:"en-IN"})[String(language||"").toLowerCase()]||"en-IN";}
 function initEasyHelp(){
  const makeMapLink=origin=>{const link=$("mapDirections");link.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("Sampark Centre near "+origin+", Chandigarh");link.hidden=false;};
  $("locateCentre").addEventListener("click",()=>{if(!navigator.geolocation){$("locationNotice").textContent="Location is unavailable in this browser. Enter your sector below.";return;}$("locationNotice").textContent="Finding your location…";navigator.geolocation.getCurrentPosition(pos=>{makeMapLink(pos.coords.latitude+","+pos.coords.longitude);$("locationNotice").textContent="Nearby results are ready. Your location is shared with Maps only if you open the link.";},()=>{$("locationNotice").textContent="Could not access your location. Enter your sector below.";},{enableHighAccuracy:false,timeout:10000,maximumAge:120000});});
@@ -140,6 +157,7 @@ function renderServices(){
 $("serviceSearch")?.addEventListener("input",renderServices);
 function initReport(){
  initVoiceInput("reportVoiceInput","issue","reportVoiceLanguage","reportVoiceNotice");
+ initSpeechResponse("reportSpeakResponse","reportSpeechStatus",()=>currentDraft?`CivicSathi prepared a ${categories[currentDraft.category]||currentDraft.category} draft. ${currentDraft.summary}${currentDraft.location?" Location: "+currentDraft.location:""}. Review the details and correct anything that is wrong before submitting.`:"There is no AI draft to read yet.",()=>speechLanguage(currentDraft?.language));
  Object.entries(categories).forEach(([value,label])=>{const o=node("option",label);o.value=value;$("category").append(o);});
  const routedDraft=readRoutedDraft();if(routedDraft){
   currentDraft=routedDraft;$("issue").value=routedDraft.source_text||routedDraft.summary||"";$("category").value=routedDraft.category||"other";
@@ -225,6 +243,8 @@ function initServiceRequest(){
   else if(group==="social_welfare"){$("beneficiaryName").value=fields.beneficiary_name||"";$("relationship").value=fields.relationship||"Self";$("welfareAddress").value=fields.address||routedDraft.location||me?.address||"";$("welfareDescription").value=fields.description||routedDraft.summary||"";$("welfareKind").textContent=select.options[select.selectedIndex].text;}
   else if(group==="horticulture"){$("requestLocation").value=routedDraft.location||fields.address||"";$("requestDescription").value=fields.description||routedDraft.summary||"";}
   $("requestNotice").textContent="AI-filled details are ready. Review them, complete any missing required fields, then confirm before saving.";
+  $("aiVoiceCard").hidden=false;$("applyAiSummary").textContent=(categories[routedDraft.category]||"Civic service")+" · "+(routedDraft.summary||"");
+  initSpeechResponse("applySpeakResponse","applySpeechStatus",()=>`CivicSathi understood this as ${categories[routedDraft.category]||"a civic service request"}. ${routedDraft.summary||""}${routedDraft.location?" Location: "+routedDraft.location:""}. Review the prefilled details and complete anything missing before saving.`,()=>speechLanguage(routedDraft.language));
  }
  select.addEventListener("change",()=>{$("welfareKind").textContent=select.options[select.selectedIndex].text;});
  $("serviceRequestForm").addEventListener("submit",async e=>{e.preventDefault();const type=select.value,details={};if(type==="health_appointment"){details.department=$("department").value;details.preferred_date=$("preferredDate").value;details.reason=$("visitReason").value.trim();}else if(type==="horticulture"){details.location=$("requestLocation").value.trim();details.description=$("requestDescription").value.trim();if(!details.location||!details.description){$("requestNotice").textContent="Add the location and a short description.";return;}}else{details.beneficiary_name=$("beneficiaryName").value.trim();details.relationship=$("relationship").value;details.address=$("welfareAddress").value.trim();details.description=$("welfareDescription").value.trim();if(!details.beneficiary_name){$("requestNotice").textContent="Enter the beneficiary name.";return;}}
