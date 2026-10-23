@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 590" fill="none">
+<defs><pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" stroke="#c3cfbf" stroke-width=".65"/></pattern><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e2ead9"/><stop offset="1" stop-color="#eef0df"/></linearGradient><pattern id="windows" width="32" height="31" patternUnits="userSpaceOnUse"><path d="M5 5H26V25H5Z" fill="#394d40"/><path d="M15 5V25" stroke="#c3ba96" stroke-width="2"/></pattern></defs>
+<rect width="620" height="590" rx="10" fill="url(#sky)"/><rect width="620" height="590" rx="10" fill="url(#grid)"/>
+<circle cx="454" cy="116" r="60" fill="#dd774d"/><circle cx="454" cy="116" r="76" stroke="#b8c5ac" stroke-dasharray="3 7"/>
+<path d="M0 268L87 245 176 268 250 225 341 246 417 215 521 245 620 212V398H0Z" fill="#c6d0b8"/>
+<path d="M0 302L142 278 284 300 404 272 620 303V432H0Z" fill="#acbda5"/>
+<path d="M39 398L620 369V590H0V427Z" fill="#6d8c78"/><path d="M0 496L620 410V590H0Z" fill="#245947"/>
+<path d="M0 524L620 455" stroke="#bdd3c4" stroke-width="24"/><path d="M0 558L620 488" stroke="#86b7ad" stroke-width="24"/><path d="M0 589L620 521" stroke="#507f74" stroke-width="22"/>
+<path d="M79 451L320 411 422 426 173 469Z" fill="#e6dec2"/><path d="M83 440L318 400 422 417 174 458Z" fill="#f0ebda"/>
+<path d="M76 319L313 284 313 401 76 439Z" fill="#c0b89a"/><path d="M313 284L417 307V419L313 401Z" fill="#9f9e82"/>
+<path d="M88 325L302 295V389L88 423Z" fill="url(#windows)"/><path d="M326 305L403 322V397L326 381Z" fill="#485d48"/>
+<path d="M64 309L309 272 432 299 420 315 309 291 77 326Z" fill="#e8dfbe"/>
+<path d="M64 309L65 293 308 257 432 285V299L309 272Z" fill="#f1ead5"/>
+<path d="M106 317V417M148 310V411M190 304V405M233 297V399M276 291V391" stroke="#ddd4b6" stroke-width="8"/>
+<path d="M331 309V383M358 315V388M386 321V394" stroke="#c2bc9c" stroke-width="6"/>
+<path d="M49 444L321 402 440 425" stroke="#819480" stroke-width="2"/>
+<!-- Sculptural open-hand motif; a stylized architectural illustration -->
+<path d="M462 381V216" stroke="#344f41" stroke-width="10"/><path d="M443 383H485L500 398H425Z" fill="#d6ceb0"/>
+<path d="M461 235L436 215 419 188Q417 181 424 183L442 198 435 165Q434 158 440 158L456 191 454 143Q455 134 462 141L469 188 478 146Q481 139 486 145L481 192 497 161Q501 156 505 162L491 204 515 188Q525 182 523 192L502 220 474 237Z" fill="#bd7550" stroke="#8c553e" stroke-width="2"/>
+<path d="M451 205L471 215 494 206" stroke="#e7b389" stroke-width="2"/>
+<path d="M498 403L542 391 563 399 522 412Z" fill="#143e32" opacity=".2"/>
+<g fill="#1c4f3d"><path d="M45 390C-7 376 9 340 29 329C12 306 40 278 56 298C82 275 102 309 83 328C111 350 91 381 64 390Z"/><path d="M529 352C500 340 507 318 520 309C507 287 529 268 543 284C562 266 584 289 569 310C594 329 573 354 552 354Z"/><path d="M572 408C545 395 550 371 562 363C548 344 573 328 582 344C601 326 617 350 603 365C626 386 606 408 592 408Z"/></g>
+<g stroke="#ddcfaa" stroke-width="3"><path d="M52 416V329M52 375L31 354M52 354L72 331"/><path d="M541 382V308M541 343L558 325"/><path d="M582 432V365M582 395L597 379"/></g>
+<g stroke="#fbf7df" stroke-width="2"><path d="M28 501L123 490M197 478L290 467M372 455L479 443M99 548L178 539M300 526L396 514M465 552L568 540"/></g>
+<path d="M40 40H80M40 40V80M580 40H540M580 40V80" stroke="#80977d"/>
+<text x="40" y="72" fill="#526b55" font-family="monospace" font-size="10" letter-spacing="2">THE CITY BEAUTIFUL</text>
+<path d="M548 201L555 190 562 201M555 190V225" stroke="#607b61" stroke-width="1.5"/><text x="550" y="181" fill="#526b55" font-family="monospace" font-size="10">N</text>
+</svg>

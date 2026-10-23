@@ -1,10 +1,8 @@
-# Civic service categories (prototype seed)
-
-This starter catalogue is illustrative and must be verified against current official Chandigarh service information before being represented as authoritative. It is not an official municipal routing directory.
-
-- Solid Waste Management
-- Roads and Public Works
-- Street Lighting
-- Water and Sewerage
-- Horticulture
-- Property and Municipal Services
+# Service categories
+- grievance: roads, streetlights, garbage, civic complaints
+- property_tax: property tax questions
+- echallan: challans
+- horticulture: public trees, pruning, plantation
+- license: licences, renewal
+- water_sewage: water supply, leakage, sewerage
+- other: unclear; ask for clarification

@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      TEXT_PROVIDER: ${TEXT_PROVIDER:-google-gemma}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMMA_TEXT_MODEL: ${GEMMA_TEXT_MODEL:-gemma-4-26b-a4b-it}
+      GEMMA_VISION_MODEL: ${GEMMA_VISION_MODEL:-gemma-4-26b-a4b-it}
+      STAFF_EMAILS: ${STAFF_EMAILS:-}
+      DB_PATH: /data/civicsathi.db
+      AUDIT_LOG_PATH: /data/audit.jsonl
+    volumes: ["civic_data:/data"]
+volumes:
+  civic_data:

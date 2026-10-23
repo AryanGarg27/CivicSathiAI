@@ -1,22 +1,18 @@
 import re
-from collections import Counter
-
-def _tokens(text: str) -> Counter:
-    words = re.findall(r"[a-z0-9]+", text.lower())
-    stop = {"the", "a", "an", "is", "are", "at", "in", "on", "near", "and", "for", "to", "of", "has", "have", "been", "there"}
-    return Counter(w for w in words if w not in stop)
-
-def _similarity(a: str, b: str) -> float:
-    ta, tb = set(_tokens(a)), set(_tokens(b))
-    if not ta or not tb:
-        return 0.0
-    return len(ta & tb) / len(ta | tb)
-
-def find_possible_duplicates(query: str, samples: list[dict], threshold: float = 0.18) -> list[dict]:
-    """Simple lexical baseline for hints only; not a semantic model and not an auto-rejection."""
-    out = []
-    for item in samples:
-        score = _similarity(query, item.get("summary", ""))
-        if score >= threshold:
-            out.append({"id": item.get("id", "sample"), "summary": item.get("summary", ""), "score": round(score, 3)})
-    return sorted(out, key=lambda row: row["score"], reverse=True)
+from difflib import SequenceMatcher
+def tokens(s): return set(re.findall(r'\w+',s.casefold()))
+def similarity(a,b):
+    x,y=tokens(a),tokens(b)
+    overlap=len(x&y)/max(1,len(x|y))
+    return round(max(overlap,SequenceMatcher(None,a.casefold(),b.casefold()).ratio()*0.7),3)
+def find_duplicates(draft,cases,threshold=.47):
+    matches=[]
+    for case in cases:
+        if case['category']!=draft.category: continue
+        # Identical wording in different sectors should not be flagged as the same issue.
+        sector = lambda value: re.search(r'(?:sector|सेक्टर|ਸੈਕਟਰ)\s*[-:]?\s*(\d+[a-z]?)\b', value or '', re.I)
+        a,b=sector(draft.location),sector(case.get('location'))
+        if a and b and a.group(1).casefold()!=b.group(1).casefold(): continue
+        score=similarity(draft.summary+' '+(draft.location or ''),case['summary']+' '+(case['location'] or ''))
+        if score>=threshold: matches.append({'id':case['id'],'score':score,'summary':case['summary']})
+    return sorted(matches,key=lambda x:-x['score'])[:5]

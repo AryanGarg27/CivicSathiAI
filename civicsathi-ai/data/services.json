@@ -1,8 +1,11 @@
 [
-  {"category":"Solid Waste Management","service":"Waste / garbage complaint guidance","keywords":["garbage","waste","rubbish","collection","dumping"]},
-  {"category":"Roads and Public Works","service":"Road or pothole complaint guidance","keywords":["pothole","road","pavement","street"]},
-  {"category":"Street Lighting","service":"Streetlight issue guidance","keywords":["streetlight","street light","lamp","lighting"]},
-  {"category":"Water and Sewerage","service":"Water supply or sewerage service guidance","keywords":["water","sewer","sewage","drain","leak"]},
-  {"category":"Horticulture","service":"Park or tree maintenance guidance","keywords":["park","tree","horticulture","branch"]},
-  {"category":"Property and Municipal Services","service":"Property tax or municipal service guidance","keywords":["property tax","tax","license","lease","challan"]}
+{"category":"health","name":"Government hospital appointments","description":"Explore doctor appointment requests listed for GMSH-16 and GMCH. This demo records a request only; confirm booking with the hospital or official portal.","source":"https://sampark.chd.nic.in/Epayment/StaticPages/other_services.aspx","action":"health_appointment","verification":"Sampark lists doctor's appointments for GMSH and GMCH; booking is not integrated"},
+{"category":"social_welfare","name":"Senior citizen and social welfare","description":"Start a demo request for a senior citizen card, disability ID card, or old-age, widow and disability pension application.","source":"https://sampark.chd.nic.in/Epayment/StaticPages/other_services.aspx","action":"social_welfare","verification":"Sampark lists these as applications accepted at centres; this prototype does not determine eligibility"},
+{"category":"grievance","name":"Public grievance redressal","description":"Civic issue reporting and follow-up","source":"https://mcchandigarh.gov.in/","verification":"Confirm live service link before publishing"},
+{"category":"property_tax","name":"Property tax","description":"Property-tax service guidance","source":"https://mcchandigarh.gov.in/","verification":"Confirm requirements with official portal"},
+{"category":"echallan","name":"E-challans","description":"Challan information and payment guidance","source":"https://mcchandigarh.gov.in/","verification":"Confirm relevant issuing authority"},
+{"category":"horticulture","name":"Horticulture requests","description":"Report a public tree, park or green-space issue. Staff review and status updates are demo-only.","source":"https://mcchandigarh.gov.in/","action":"horticulture","verification":"Confirm process with official portal"},
+{"category":"centres","name":"Sampark centres, services and holidays","description":"Find current locations, hours, holidays, fees and centre navigation through the official e-Sampark channels.","source":"https://sampark.chd.nic.in/","verification":"Live centre listings/fees not copied into this prototype"},
+{"category":"license","name":"Licences and renewals","description":"Municipal licensing guidance","source":"https://mcchandigarh.gov.in/","verification":"Confirm process with official portal"},
+{"category":"water_sewage","name":"Water and sewerage","description":"Water and sewerage service discovery","source":"https://mcchandigarh.gov.in/","verification":"Confirm service ownership and links"}
 ]
