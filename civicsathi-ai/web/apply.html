@@ -1,11 +1,109 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f8f8f2"><title>Start a service request · CivicSathi AI</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script><link rel="icon" type="image/svg+xml" href="/static/favicon.svg"><link rel="alternate icon" href="/static/favicon.svg"></head>
-<body><header><a class="logo" href="/" aria-label="CivicSathi home"><span class="brand-mark">c<span>•</span></span> CivicSathi<span class="ai-label">AI</span></a><nav aria-label="Main navigation"><a href="/services">Services</a><a href="/ask">Ask CivicSathi</a><a href="/help">Nearby help</a><a href="/report">Report</a><a href="/track">Track</a><a id="accountLink" href="/sign-in">Sign in</a><a id="profileLink" href="/profile" hidden>My profile</a><a id="staffLink" href="/staff" hidden>Staff</a></nav></header>
-<main><div id="systemStatus" class="system-status" role="status" hidden></div><section class="page-hero"><p class="eyebrow">SERVICE REQUEST · CHANDIGARH</p><h1 id="applyTitle">Start a <em>request.</em></h1><p>Share only the information needed to prepare this demo request. It will be saved to your CivicSathi account for tracking.</p></section>
-<section id="aiVoiceCard" class="callout" hidden><strong>CivicSathi understood your request.</strong><p id="applyAiSummary" class="muted"></p><button id="applySpeakResponse" class="secondary" type="button">🔊 Listen to AI response</button><p id="applySpeechStatus" class="helper" role="status" aria-live="polite"></p></section><section class="columns"><form id="serviceRequestForm" class="panel request-form"><h2>Applicant details</h2><label for="serviceType">Service</label><select id="serviceType" required></select><label for="applicantName">Applicant name</label><input id="applicantName" maxlength="100" autocomplete="name" required><label for="phone">Contact phone</label><input id="phone" type="tel" maxlength="20" autocomplete="tel" required>
-<div id="healthFields" hidden><h2>Appointment preference</h2><label for="department">Department / clinic</label><select id="department" required><option value="">Choose a department</option><option>General Medicine</option><option>Orthopaedics</option><option>Ophthalmology</option><option>ENT</option><option>Other / not sure</option></select><label for="preferredDate">Preferred date</label><input id="preferredDate" type="date" required><label for="visitReason">Optional short note</label><textarea id="visitReason" maxlength="300" placeholder="Avoid including detailed medical history"></textarea><p class="helper">This records a preference only. It does not book a confirmed appointment or contact the hospital.</p></div>
-<div id="welfareFields" hidden><h2>Social welfare request</h2><p id="welfareKind" class="muted">Choose an application type above.</p><label for="beneficiaryName">Beneficiary name</label><input id="beneficiaryName" maxlength="100"><label for="relationship">Applicant's relationship to beneficiary</label><select id="relationship"><option>Self</option><option>Family member</option><option>Caregiver</option><option>Other</option></select><label for="welfareAddress">Chandigarh address</label><textarea id="welfareAddress" maxlength="300"></textarea><label for="welfareDescription">Optional note</label><textarea id="welfareDescription" maxlength="300" placeholder="Do not enter Aadhaar, bank, or medical record numbers"></textarea><p class="helper">The prototype does not check eligibility, collect documents or submit to the Social Welfare Department. Confirm requirements at an official Sampark Centre.</p></div>
-<div id="horticultureFields" hidden><h2>Where should the team look?</h2><label for="requestLocation">Location / sector</label><input id="requestLocation" maxlength="250" placeholder="e.g., Sector 17, near the public park"><label for="requestDescription">What needs attention?</label><textarea id="requestDescription" maxlength="500" placeholder="Tree, park, or public green-space issue"></textarea><p class="helper">This is a demo request; it is not delivered to the Municipal Corporation.</p></div>
-<label class="check"><input type="checkbox" id="requestConsent" required> I understand this request is stored in this prototype for tracking and is not an official application or booking.</label><button id="requestSubmit" type="submit">Save demo request</button><p id="requestNotice" role="status" class="status-message"></p><a id="viewTracking" href="/track" hidden>View tracking page →</a></form><section id="serviceSuccess" class="panel" hidden><p class="eyebrow">REQUEST RECEIVED</p><h2>Your request was saved.</h2><p id="serviceSuccessId" class="case-id"></p><p class="muted">This is a CivicSathi demo request, not an official appointment or government application.</p><a class="button-link" href="/track">Track this request →</a></section>
-<aside class="panel"><p class="eyebrow">OFFICIAL SERVICE REFERENCE</p><h2>Before you continue</h2><p class="muted">e-Sampark Chandigarh lists doctor appointments for GMSH and GMCH, and Social Welfare services including senior citizen cards, disability identity cards and pension applications.</p><a href="https://sampark.chd.nic.in/Epayment/StaticPages/other_services.aspx" target="_blank" rel="noopener noreferrer">Verify current details at e-Sampark ↗</a><p class="helper">Use the official portal or centre for actual appointments, eligibility, documents, fees and application submission.</p></aside></section></main>
-<footer><a class="footer-brand" href="/">CivicSathi AI</a><span>Made with care, for the City Beautiful.</span><span>Independent prototype · No municipal integration</span></footer></body></html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f8f2">
+    <title>Start a service request · CivicSathi AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.svg">
+</head>
+
+<body>
+    <header><a class="logo" href="/" aria-label="CivicSathi home"><span class="brand-mark">c<span>•</span></span>
+            CivicSathi<span class="ai-label">AI</span></a>
+        <nav aria-label="Main navigation"><a href="/services">Services</a><a href="/ask">Ask CivicSathi</a><a
+                href="/help">Nearby help</a><a href="/report">Report</a><a href="/track">Track</a><a id="accountLink"
+                href="/sign-in">Sign in</a><a id="profileLink" href="/profile" hidden>My profile</a><a id="staffLink"
+                href="/staff" hidden>Staff</a></nav>
+    </header>
+    <main>
+        <div id="systemStatus" class="system-status" role="status" hidden></div>
+        <section class="page-hero">
+            <p class="eyebrow">SERVICE REQUEST · CHANDIGARH</p>
+            <h1 id="applyTitle">Start a <em>request.</em></h1>
+            <p>Share only the information needed to prepare this demo request. It will be saved to your CivicSathi
+                account for tracking.</p>
+        </section>
+        <section id="aiVoiceCard" class="callout" hidden><strong>CivicSathi understood your request.</strong>
+            <p id="applyAiSummary" class="muted"></p><button id="applySpeakResponse" class="secondary" type="button">🔊
+                Listen to AI response</button>
+            <p id="applySpeechStatus" class="helper" role="status" aria-live="polite"></p>
+        </section>
+        <section class="columns">
+            <form id="serviceRequestForm" class="panel request-form">
+                <h2>Applicant details</h2><label for="serviceType">Service</label><select id="serviceType"
+                    required></select><label for="applicantName">Applicant name</label><input id="applicantName"
+                    maxlength="100" autocomplete="name" required><label for="phone">Contact phone</label><input
+                    id="phone" type="tel" maxlength="20" autocomplete="tel" required>
+                <div id="healthFields" hidden>
+                    <h2>Appointment preference</h2><label for="department">Department / clinic</label><select
+                        id="department" required>
+                        <option value="">Choose a department</option>
+                        <option>General Medicine</option>
+                        <option>Orthopaedics</option>
+                        <option>Ophthalmology</option>
+                        <option>ENT</option>
+                        <option>Other / not sure</option>
+                    </select><label for="preferredDate">Preferred date</label><input id="preferredDate" type="date"
+                        required><label for="visitReason">Optional short note</label><textarea id="visitReason"
+                        maxlength="300" placeholder="Avoid including detailed medical history"></textarea>
+                    <p class="helper">This records a preference only. It does not book a confirmed appointment or
+                        contact the hospital.</p>
+                </div>
+                <div id="welfareFields" hidden>
+                    <h2>Social welfare request</h2>
+                    <p id="welfareKind" class="muted">Choose an application type above.</p><label
+                        for="beneficiaryName">Beneficiary name</label><input id="beneficiaryName" maxlength="100"><label
+                        for="relationship">Applicant's relationship to beneficiary</label><select id="relationship">
+                        <option>Self</option>
+                        <option>Family member</option>
+                        <option>Caregiver</option>
+                        <option>Other</option>
+                    </select><label for="welfareAddress">Chandigarh address</label><textarea id="welfareAddress"
+                        maxlength="300"></textarea><label for="welfareDescription">Optional note</label><textarea
+                        id="welfareDescription" maxlength="300"
+                        placeholder="Do not enter Aadhaar, bank, or medical record numbers"></textarea>
+                    <p class="helper">The prototype does not check eligibility, collect documents or submit to the
+                        Social Welfare Department. Confirm requirements at an official Sampark Centre.</p>
+                </div>
+                <div id="horticultureFields" hidden>
+                    <h2>Where should the team look?</h2><label for="requestLocation">Location / sector</label><input
+                        id="requestLocation" maxlength="250" placeholder="e.g., Sector 17, near the public park"><label
+                        for="requestDescription">What needs attention?</label><textarea id="requestDescription"
+                        maxlength="500" placeholder="Tree, park, or public green-space issue"></textarea>
+                    <p class="helper">This is a demo request; it is not delivered to the Municipal Corporation.</p>
+                </div>
+                <label class="check"><input type="checkbox" id="requestConsent" required> I understand this request is
+                    stored in this prototype for tracking and is not an official application or booking.</label><button
+                    id="requestSubmit" type="submit">Save demo request</button>
+                <p id="requestNotice" role="status" class="status-message"></p><a id="viewTracking" href="/track"
+                    hidden>View tracking page →</a>
+            </form>
+            <section id="serviceSuccess" class="panel" hidden>
+                <p class="eyebrow">REQUEST RECEIVED</p>
+                <h2>Your request was saved.</h2>
+                <p id="serviceSuccessId" class="case-id"></p>
+                <p class="muted">This is a CivicSathi demo request, not an official appointment or government
+                    application.</p><a class="button-link" href="/track">Track this request →</a>
+            </section>
+            <aside class="panel">
+                <p class="eyebrow">OFFICIAL SERVICE REFERENCE</p>
+                <h2>Before you continue</h2>
+                <p class="muted">e-Sampark Chandigarh lists doctor appointments for GMSH and GMCH, and Social Welfare
+                    services including senior citizen cards, disability identity cards and pension applications.</p><a
+                    href="https://sampark.chd.nic.in/Epayment/StaticPages/other_services.aspx" target="_blank"
+                    rel="noopener noreferrer">Verify current details at e-Sampark ↗</a>
+                <p class="helper">Use the official portal or centre for actual appointments, eligibility, documents,
+                    fees and application submission.</p>
+            </aside>
+        </section>
+    </main>
+    <footer><a class="footer-brand" href="/">CivicSathi AI</a><span>Made with care, for the City
+            Beautiful.</span><span>Independent prototype · No municipal integration</span></footer>
+</body>
+
+</html>

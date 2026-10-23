@@ -33,6 +33,28 @@ def login_staff(client):
     assert response.status_code == 201
 
 
+def test_social_welfare_request_can_be_saved_and_tracked(client):
+    payload = {
+        'service_type': 'senior_card',
+        'applicant_name': 'Demo Citizen',
+        'contact_phone': '9876543210',
+        'details': {'beneficiary_name': 'Demo Citizen', 'relationship': 'Self',
+                    'address': 'Sector 22, Chandigarh', 'description': 'Senior citizen card'},
+    }
+    client.post('/api/auth/logout')
+    assert client.post('/api/service-requests', json=payload).status_code == 401
+    login = client.post('/api/auth/login', json={
+        'email': 'citizen@example.test', 'password': 'citizen-demo-password-82',
+    })
+    assert login.status_code == 200
+    created = client.post('/api/service-requests', json=payload)
+    assert created.status_code == 201, created.text
+    assert created.json()['service_type'] == 'senior_card'
+    tracked = client.get('/api/my/service-requests')
+    assert tracked.status_code == 200
+    assert tracked.json()[0]['id'] == created.json()['id']
+
+
 def photo_payload():
     output = io.BytesIO()
     Image.new('RGB', (32, 24), 'gray').save(output, format='PNG')
