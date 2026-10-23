@@ -156,6 +156,7 @@ function renderServices(){
 }
 $("serviceSearch")?.addEventListener("input",renderServices);
 function initReport(){
+ initComplaintMap();
  initVoiceInput("reportVoiceInput","issue","reportVoiceLanguage","reportVoiceNotice");
  initSpeechResponse("reportSpeakResponse","reportSpeechStatus",()=>currentDraft?`CivicSathi prepared a ${categories[currentDraft.category]||currentDraft.category} draft. ${currentDraft.summary}${currentDraft.location?" Location: "+currentDraft.location:""}. Review the details and correct anything that is wrong before submitting.`:"There is no AI draft to read yet.",()=>speechLanguage(currentDraft?.language));
  Object.entries(categories).forEach(([value,label])=>{const o=node("option",label);o.value=value;$("category").append(o);});
@@ -164,7 +165,7 @@ function initReport(){
   $("summary").value=routedDraft.summary||"";$("location").value=routedDraft.location||"";
   $("meta").textContent="Details from Ask CivicSathi are filled in. Review and edit them; add a location if missing.";
   $("matchedService").textContent="Suggested service: "+(lookupCategory(routedDraft.category)||"Civic service")+". This remains a demo request.";
-  $("result").hidden=false;$("notice").textContent="AI draft loaded. Check the category, summary and location, then confirm before submitting.";
+  $("result").hidden=false;window.showComplaintMap?.();$("notice").textContent="AI draft loaded. Check the category, summary and location, then confirm before submitting.";
  }
  $("photo").addEventListener("change",()=>{
   clearPhoto();const f=$("photo").files[0];if(!f)return;
@@ -181,7 +182,7 @@ function initReport(){
   currentDraft=data.draft;$("category").value=currentDraft.category;$("summary").value=currentDraft.summary;$("location").value=currentDraft.location||"";
   $("meta").textContent="Missing details: "+(currentDraft.missing_fields.join(", ")||"none identified")+". AI findings need your review.";
   $("matchedService").textContent="Suggested service: "+(data.service?.name||"Choose an appropriate civic service.");
-  drawDuplicates(data.possible_duplicates||[]);$("result").hidden=false;$("notice").textContent=data.mode==="safe-fallback"?"AI is unavailable. A basic suggestion was generated; please review it carefully.":"Draft prepared. Check the facts and location.";
+  drawDuplicates(data.possible_duplicates||[]);$("result").hidden=false;window.showComplaintMap?.();$("notice").textContent=data.mode==="safe-fallback"?"AI is unavailable. A basic suggestion was generated; please review it carefully.":"Draft prepared. Check the facts and location.";
  }));
  ["category","summary","location"].forEach(id=>$(id).addEventListener("input",()=>{ $("confirm").checked=false;$("duplicates").textContent="Details changed. Recheck before submitting."; }));
  $("checkDuplicates").addEventListener("click",async()=>{try{drawDuplicates(await post("/api/duplicates",draftFromForm()));}catch(e){$("duplicates").textContent=e.message;}});
@@ -194,6 +195,30 @@ function initReport(){
   $("submit").disabled=true;
  }));
  $("newComplaint").addEventListener("click",()=>location.reload());
+}
+function initComplaintMap(){
+ const status=$("mapSelectionStatus"),locationField=$("location");let map=null,pin=null;
+ const setStatus=text=>{if(status)status.textContent=text;};
+ const selectPoint=async(lat,lng)=>{
+  const point=[Number(lat.toFixed(6)),Number(lng.toFixed(6))];
+  if(pin)pin.remove();pin=window.L.circleMarker(point,{radius:9,color:"#fff",weight:3,fillColor:"#245c46",fillOpacity:1}).addTo(map);
+  map.setView(point,Math.max(map.getZoom(),16));setStatus("Pin selected. Finding the nearest address…");
+  let place="";
+  try{const url=new URL("https://nominatim.openstreetmap.org/reverse");url.search=new URLSearchParams({format:"jsonv2",lat:String(point[0]),lon:String(point[1]),zoom:"18",addressdetails:"1"});const response=await fetch(url,{headers:{"Accept-Language":"en"}});if(response.ok){const result=await response.json();place=(result.display_name||"").split(",").slice(0,4).join(", ");}}catch{}
+  const coordinate=`${point[0]}, ${point[1]}`;locationField.value=(place?`${place} · `:"")+`Map pin: ${coordinate}`;
+  locationField.dispatchEvent(new Event("input",{bubbles:true}));setStatus(`Location selected: ${place||"map coordinates"} (${coordinate}). Check the complaint location field.`);
+ };
+ const show=()=>{
+  if(!window.L){setStatus("The interactive map could not load. Enter the sector or nearest landmark above instead.");return;}
+  if(!map){map=window.L.map("complaintMap",{scrollWheelZoom:false}).setView([30.7333,76.7794],13);window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);map.on("click",event=>selectPoint(event.latlng.lat,event.latlng.lng));}
+  setTimeout(()=>map.invalidateSize(),80);
+ };
+ window.showComplaintMap=show;
+ $("useCurrentLocation")?.addEventListener("click",()=>{
+  if(!navigator.geolocation){setStatus("Location access is unavailable. Tap the map or enter an address manually.");return;}
+  setStatus("Requesting your location… Allow access in the browser prompt.");
+  navigator.geolocation.getCurrentPosition(position=>{show();if(map)selectPoint(position.coords.latitude,position.coords.longitude);},()=>setStatus("Could not access your location. Tap the map or enter an address manually."),{enableHighAccuracy:false,timeout:12000,maximumAge:120000});
+ });
 }
 async function withBusy(fn){
  if(busy)return;busy=true;["analyze","photoAnalyze","submit","photo","issue","photoConsent"].forEach(id=>{const e=$(id);if(e)e.disabled=true;});

@@ -49,7 +49,7 @@ The judge pitch, demo sequence, and likely Q&A are in [docs/hackathon-pitch.md](
 
 1. Create an account at **Sign up** or sign in at **Sign in**. Browse the home page and **Services** without signing in; applications, reports, tracking and account details require your account.
 2. For photos, agree to Google processing and local evidence storage. **Prepare complaint draft** analyzes the photo automatically. **Analyze photograph** lets you inspect findings first.
-3. Review the summary, category and location. A photo alone cannot supply the location. Unrelated images are categorized `other` and must not be forced into a complaint.
+3. Review the summary and category, then tap the map to mark where the issue occurred or use your current location. The selected area and coordinates are inserted into the complaint location; check them before submitting. A photo alone cannot supply the location. Unrelated images are categorized `other` and must not be forced into a complaint.
 4. Check the suggested service and possible duplicates. Recheck after editing. Confirm the details, then **Create demo case**. Keep the tracking ID private.
 5. Staff members use the same sign-in page. Add staff emails to `STAFF_EMAILS` before they register. Staff can move cases to **Under review**, **In progress** and **Resolved**; resolution or rejection requires a note.
 6. From **Ask CivicSathi**, type or dictate a request without choosing a category. Review the AI's suggested category, service and summary before saving. Every confirmed request is stored in your account database and receives a tracking number.
@@ -112,6 +112,7 @@ Create `.env` first. This starts only the application and uses hosted Gemma. SQL
 - Service descriptions and portal links are provisional, not verified current procedures or fees.
 - Duplicate matching is lexical, bounded to the latest 1,000 cases, with a different-sector exclusion. It is not multilingual semantic deduplication.
 - Photos are decoded, resized to a 1280-pixel longest edge, and re-encoded without metadata. Unsubmitted uploads older than 24 hours are cleaned on startup and subsequent uploads. Attached photos persist with cases.
+- The complaint map uses Leaflet with OpenStreetMap tiles and reverse geocoding. A selected pin is sent to OpenStreetMap's reverse lookup and its area plus coordinates are stored as the request location. Manual location entry remains available if the map or network is unavailable.
 - Citizens must be signed in and owner checks protect their cases and photos. Staff role is granted only to emails in `STAFF_EMAILS` when those accounts register.
 - Google HTTP 500/502/503/504 errors receive one automatic retry. Quota and authorization errors are not retried; the UI reports the failure and allows manual continuation. Before handling real residents, add account recovery, email verification, deletion/export controls, stronger edge rate limits, backups and a privacy review.
 - Existing SQLite cases are preserved through additive migrations. Back up `civicsathi.db` before moving or deploying the app.
