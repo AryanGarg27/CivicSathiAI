@@ -18,7 +18,7 @@ from app.permissions import require
 from app.database import initialize, connect, all_cases, get_case, get_photo, cleanup_photos, service_requests, get_service_request
 from app.duplicate_detection import find_duplicates
 from app.audit_log import append
-from app.service_retrieval import DATA, lookup
+from app.service_retrieval import all_services, lookup
 from app.gemmavision_adapter import analyze_gemma_photo, GemmaVisionUnavailable
 from app.images import normalize_image
 from app.auth import password_hash, verify_password, create_session, current_user, revoke_session, assigned_role, SESSION_DAYS
@@ -109,7 +109,7 @@ def health():
 
 @app.get('/api/services')
 def services():
-    return DATA
+    return all_services()
 
 
 def user_from_request(request):

@@ -56,6 +56,10 @@ function renderServices(){
  services.filter(s=>(s.name+" "+s.description+" "+s.category).toLowerCase().includes(query)).forEach(s=>{
   const card=node("article",undefined,"service-card");
   card.append(node("span",categories[s.category]||s.category,"card-number"),node("h2",s.name),node("p",s.description));
+  if(s.category==="centres"){
+   const map=node("a","Open Sampark Centres in Maps ↗");map.href="https://www.google.com/maps/search/?api=1&query=Sampark+Centre+Chandigarh";map.target="_blank";map.rel="noopener noreferrer";card.append(map);
+   const official=node("a","Official services and centre details ↗");official.href=s.source;official.target="_blank";official.rel="noopener noreferrer";official.className="official-link";card.append(official);wrap.append(card);return;
+  }
   const a=node("a",s.action?"Start a demo request →":s.category==="social_welfare"?"Explore requests →":"Visit official information ↗");
   if(s.action){a.href="/apply?service="+encodeURIComponent(s.action);}else if(s.category==="social_welfare"){a.href="/apply?service=social_welfare";}else{a.href=s.source;a.target="_blank";a.rel="noopener noreferrer";}card.append(a);wrap.append(card);
  });

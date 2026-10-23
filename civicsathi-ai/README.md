@@ -51,7 +51,7 @@ The health banner reports whether a key is configured, not whether the provider 
 5. Staff members use the same sign-in page. Add staff emails to `STAFF_EMAILS` before they register. Staff can move cases to **Under review**, **In progress** and **Resolved**; resolution or rejection requires a note.
 6. From **Services**, try a GMSH-16 appointment preference, a senior-citizen/disability/pension request, or a horticulture request. Requests are saved to your account and can be tracked on **Track**. Staff can update their status on the separate **Staff** page.
 
-Health and social-welfare service names are grounded in Chandigarh e-Sampark's published service list. These forms are a local demo intake only: they do not book a hospital visit, verify eligibility, accept official documents or submit anything to a government system. Use e-Sampark to confirm live requirements, fees, holidays and centres.
+Health and social-welfare service names are grounded in Chandigarh e-Sampark's published service list. The directory also opens Chandigarh Sampark Centre map results and links to official centre information. These forms are a local demo intake only: they do not book a hospital visit, verify eligibility, accept official documents or submit anything to a government system. Use e-Sampark to confirm live requirements, fees, holidays and centres.
 
 When AI is unavailable, photos remain attachable and text intake uses a clearly labeled keyword fallback. No fake AI result or official success is reported. Photo findings are schema-validated and never independently submit cases. One photo-assisted draft uses one vision call rather than requiring a second text model call.
 
